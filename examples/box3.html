@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - orbit controls</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #000;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				font-weight: bold;
+
+				background-color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				color:#000;
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+				box-sizing: border-box;
+			}
+
+			a {
+				color: red;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="info">
+			<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - orbit controls example
+		</div>
+
+		<script src="../build/three.js"></script>
+		<script src="js/libs/dat.gui.min.js"></script>
+		<script src="js/controls/OrbitControls.js"></script>
+		<script src="js/WebGL.js"></script>
+
+		<script>
+			var data = {
+				"coordinates": [
+					{
+					"x": 9.241470142772986,
+					"y": 6.39528334499659,
+					"z": -1.7403022495187468
+					},
+					{
+					"x": 7.273156342056906,
+					"y": 1.9743781660050992,
+					"z": -1.7403022495187468
+					},
+					{
+					"x": 8.871519761570639,
+					"y": 1.262740922089744,
+					"z": -1.7403022495187468
+					},
+					{
+					"x": 10.839833562286719,
+					"y": 5.6836461010812345,
+					"z": -1.7403022495187468
+					},
+					{
+					"x": 9.241470142772986,
+					"y": 6.39528334499659,
+					"z": 0.2596977504812532
+					},
+					{
+					"x": 7.273156342056906,
+					"y": 1.9743781660050992,
+					"z": 0.2596977504812532
+					},
+					{
+					"x": 8.871519761570639,
+					"y": 1.262740922089744,
+					"z": 0.2596977504812532
+					},
+					{
+					"x": 10.839833562286719,
+					"y": 5.6836461010812345,
+					"z": 0.2596977504812532
+					}
+				],
+				"center": {
+					"x": 9.056494952171812,
+					"y": 3.829012133543167,
+					"z": -0.7403022495187468
+				},
+				"rotation": {
+					"x": 0,
+					"y": Math.PI/4,
+					"z": Math.PI/2
+				},
+				"heading_radians": 2.7227136331111548,
+				"_id": "3d20bdf8-d87c-4a15-a5ce-30b2cb70d6ad",
+				"attributes": {},
+				"two_d_projection_points": {
+					"p1": {
+					"x": 0.08448267070882574,
+					"y": 0.8710089626825614
+					},
+					"p2": {
+					"x": 0.3389593260987943,
+					"y": 0.9499041643660616
+					},
+					"p3": {
+					"x": 0.41527450234666996,
+					"y": 0.857816322850376
+					},
+					"p4": {
+					"x": 0.18527218979457136,
+					"y": 0.8079961903253688
+					},
+					"p5": {
+					"x": 0.08200326672053049,
+					"y": 0.4418128015370017
+					},
+					"p6": {
+					"x": 0.33510041310128796,
+					"y": 0.4005572156164696
+					},
+					"p7": {
+					"x": 0.41196593912495233,
+					"y": 0.41087847950380263
+					},
+					"p8": {
+					"x": 0.18298826184984626,
+					"y": 0.44396815174589166
+					}
+				},
+				"dimensions": {
+					"length": 1.7496265852367126,
+					"width": 4.8392831927593525,
+					"height": 2
+				}
+			};
+
+			if ( WEBGL.isWebGLAvailable() === false ) {
+
+				document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+			}
+
+			var camera, controls, scene, renderer, box3, box3Helper, box3Clone, box3HelperClone, geometry, material, sphere, params;
+			var debugSphereClone;
+			var transformationMatrix = new THREE.Matrix4();
+			box3Clone = new THREE.Box3();
+			box3HelperClone = new THREE.Box3Helper(box3Clone, 0xff00ff);
+
+			function checkAndUpdateSphere() {
+				if(isInsideBox2(sphere.position)) {
+					sphere.material.color = new THREE.Color(0xff0000);
+				} else {
+					sphere.material.color = new THREE.Color(0xffff00);
+				}
+			}
+			function isInsideBox(vec3) {
+				box3Helper.updateMatrixWorld();
+
+				var worldToBox = new THREE.Matrix4();
+
+				var position = new THREE.Vector3();
+				var rotation = new THREE.Quaternion()
+				var scale = new THREE.Vector3()
+				box3Helper.matrixWorld.decompose(position, rotation, scale);
+
+
+				var positionMatrix = new THREE.Matrix4()
+				var rotationMatrix = new THREE.Matrix4();
+				rotationMatrix.makeRotationFromQuaternion(rotation);
+				positionMatrix.makeTranslation(position.x, position.y, position.z);
+
+				worldToBox.getInverse(positionMatrix.multiply(rotationMatrix));
+				// worldToBox.extractRotation(box3Helper.matrixWorld);
+
+				
+				var posInBoxCoord = vec3.clone();
+				posInBoxCoord.applyMatrix4(worldToBox);
+
+				var size = new THREE.Vector3();
+				box3.getSize(size)
+				box3Clone.setFromCenterAndSize(new THREE.Vector3(0, 0, 0), size);
+				debugSphereClone.position.set(posInBoxCoord.x, posInBoxCoord.y, posInBoxCoord.z);
+				return box3Clone.containsPoint(posInBoxCoord);
+
+			}
+
+			function isInsideBox2(vec3) {
+				box3Helper.scale.multiplyScalar(2);
+				box3Helper.updateMatrixWorld();
+
+				var worldToBox = new THREE.Matrix4();
+
+				worldToBox.getInverse(transformationMatrix);
+				var posInBoxCoord = vec3.clone();
+				posInBoxCoord.applyMatrix4(worldToBox);
+
+				var size = new THREE.Vector3();
+				box3.getSize(size)
+				box3Clone.setFromCenterAndSize(new THREE.Vector3(0, 0, 0), size);
+				debugSphereClone.position.set(posInBoxCoord.x, posInBoxCoord.y, posInBoxCoord.z);
+				return box3Clone.containsPoint(posInBoxCoord);
+			}
+
+
+
+			init();
+			//render(); // remove when using next line for animation loop (requestAnimationFrame)
+			animate();
+
+			function init() {
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xcccccc );
+				scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+
+				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 100 );
+				camera.position.set( 4, 2, 0 );
+
+				// controls
+
+				controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+				//controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
+
+				controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+				controls.dampingFactor = 0.25;
+
+				controls.screenSpacePanning = false;
+
+				controls.minDistance = 10;
+				controls.maxDistance = 50;
+
+				controls.maxPolarAngle = Math.PI / 2;
+
+				// world
+
+
+				var light = new THREE.DirectionalLight( 0xffffff );
+				light.position.set( 1, 1, 1 );
+				scene.add( light );
+
+				var light = new THREE.DirectionalLight( 0x002288 );
+				light.position.set( - 1, - 1, - 1 );
+				scene.add( light );
+
+				var light = new THREE.AmbientLight( 0x222222 );
+				scene.add( light );
+
+
+                //
+
+
+
+				//
+				box3 = new THREE.Box3();
+				box3.setFromCenterAndSize(new THREE.Vector3(data.center.x, data.center.y, data.center.z), new THREE.Vector3(data.dimensions.length, data.dimensions.width, data.dimensions.height));
+				
+				
+				var rotationMatrix = new THREE.Matrix4();
+				rotationMatrix.makeRotationFromEuler(new THREE.Euler(data.rotation.x, data.rotation.y, data.rotation.z))
+				transformationMatrix.makeTranslation(data.center.x, data.center.y, data.center.z);
+				transformationMatrix.multiply(rotationMatrix)
+
+
+				
+				box3Helper = new THREE.Box3Helper(box3, 0xffff00);
+				box3Helper.updateMatrixWorld(true);
+				console.log(box3);
+				 
+				box3Helper.setRotationFromEuler(new THREE.Euler(data.rotation.x, data.rotation.y, data.rotation.z))
+				scene.add(box3Helper);
+				scene.add(box3HelperClone);
+				// box3.setFromObject(box3Helper);
+				console.log(box3);
+
+				geometry = new THREE.SphereGeometry( 0.5, 32, 32 );
+				material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+				sphere = new THREE.Mesh( geometry, material );
+				debugSphereClone = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({color: 0x00ff00}));
+				sphere.position.set(8,4, -1)
+				scene.add(sphere);
+				scene.add(debugSphereClone);
+		
+				var axesHelper = new THREE.AxesHelper( 5 );
+				scene.add( axesHelper );
+
+				var params = {
+					x: sphere.position.x,
+					y: sphere.position.y,
+					z: sphere.position.z
+				};
+				var gui = new dat.GUI();
+
+				// // var cuboidGui = gui.addFolder( 'Cuboid' );
+				var PointGui = gui.addFolder( 'Point' );
+	
+				// // cuboidGui.add( params, 'roll', 0.0, 10.0 );
+				// // cuboidGui.add( params, 'pitch', 0.1, 12.0 );
+				// // cuboidGui.add( params, 'yaw', 0.1, 12.0 );
+				// // cuboidGui.add( params, 'x', 0.1, 12.0 );
+				// // cuboidGui.add( params, 'y', 0.1, 12.0 );
+				// // cuboidGui.add( params, 'z', 0.1, 12.0 );
+
+				PointGui.add( params, 'x', -20, 20, 0.01 ).onChange( function (val) {
+					sphere.position.setX(val)
+					checkAndUpdateSphere();
+				});;
+
+				PointGui.add( params, 'y', -20, 20 ).onChange( function (val) {
+					sphere.position.setY(val)
+					checkAndUpdateSphere();
+					// console.log(arg);
+				});;
+
+				PointGui.add( params, 'z', -20, 20 ).onChange( function (val) {
+					sphere.position.setZ(val)
+					checkAndUpdateSphere();
+					// console.log(arg);
+				});;
+				checkAndUpdateSphere();
+				PointGui.open();
+
+                
+				gui.open();
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+
+				render();
+
+			}
+
+			function render() {
+
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+
+	</body>
+</html>
