@@ -178,8 +178,11 @@ THREE.PCDLoader.prototype = {
 		// parse data
 
 		var position = [];
+		var positions = [];
 		var normal = [];
+		var normals = [];
 		var color = [];
+		var colors = [];
 
 		// ascii
 
@@ -243,6 +246,8 @@ THREE.PCDLoader.prototype = {
 
 				if ( offset.x !== undefined ) {
 
+					positions.push(new THREE.Vector3(dataview.getFloat32( row + offset.x, this.littleEndian ), dataview.getFloat32( row + offset.y, this.littleEndian ), dataview.getFloat32( row + offset.z, this.littleEndian )))
+
 					position.push( dataview.getFloat32( row + offset.x, this.littleEndian ) );
 					position.push( dataview.getFloat32( row + offset.y, this.littleEndian ) );
 					position.push( dataview.getFloat32( row + offset.z, this.littleEndian ) );
@@ -258,7 +263,7 @@ THREE.PCDLoader.prototype = {
 				}
 
 				if ( offset.normal_x !== undefined ) {
-
+					normals.push(new THREE.Vector3(dataview.getFloat32( row + offset.normal_x, this.littleEndian ), dataview.getFloat32( row + offset.normal_y, this.littleEndian ), dataview.getFloat32( row + offset.normal_z, this.littleEndian )))
 					normal.push( dataview.getFloat32( row + offset.normal_x, this.littleEndian ) );
 					normal.push( dataview.getFloat32( row + offset.normal_y, this.littleEndian ) );
 					normal.push( dataview.getFloat32( row + offset.normal_z, this.littleEndian ) );
@@ -279,11 +284,36 @@ THREE.PCDLoader.prototype = {
 
 		geometry.computeBoundingSphere();
 
+		var geo = new THREE.Geometry();
+		if (positions.length > 0) {
+			for(var i = 0; i < positions.length; i++) {
+				colors.push(new THREE.Color(Math.random(),Math.random(),Math.random()));
+			}
+
+			setInterval(() => {
+				colors = []
+				for(var i = 0; i < positions.length; i++) {
+					colors.push(new THREE.Color(Math.random(),Math.random(),Math.random()));
+				}
+
+				geo.colors = colors;
+
+				geo.colorsNeedUpdate = true;
+
+			}, 1)
+		}
+		geo.vertices = positions;
+		geo.normals = normals;
+		geo.colors = colors;
+		geo.needsUpdate = true;
+		geo.computeBoundingSphere();
+
+
 		// build material
 
 		var material = new THREE.PointsMaterial( { size: 0.005 } );
 
-		if ( color.length > 0 ) {
+		if ( colors.length > 0 ) {
 
 			material.vertexColors = THREE.VertexColors;
 
@@ -295,7 +325,7 @@ THREE.PCDLoader.prototype = {
 
 		// build mesh
 
-		var mesh = new THREE.Points( geometry, material );
+		var mesh = new THREE.Points( geo, material );
 		var name = url.split( '' ).reverse().join( '' );
 		name = /([^\/]*)/.exec( name );
 		name = name[ 1 ].split( '' ).reverse().join( '' );
