@@ -414,6 +414,7 @@ THREE.TrackballControls = function ( object, domElement ) {
 		document.addEventListener( 'mouseup', mouseup, false );
 
 		_this.dispatchEvent( startEvent );
+		console.log('camera', this.object);
 
 	}
 
@@ -492,7 +493,7 @@ THREE.TrackballControls = function ( object, domElement ) {
 	function touchstart( event ) {
 
 		if ( _this.enabled === false ) return;
-		
+
 		event.preventDefault();
 
 		switch ( event.touches.length ) {

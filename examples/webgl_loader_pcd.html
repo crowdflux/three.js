@@ -46,10 +46,11 @@
 
 
 		<script src="../build/three.js"></script>
-		<script src="js/loaders/PCDLoader.js"></script>
+		<script src="../src/loaders/FileLoader.js"></script>
 		<script src="js/controls/TrackballControls.js"></script>
 		<script src="js/WebGL.js"></script>
 		<script src="js/libs/stats.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
 
 		<script>
 
@@ -62,16 +63,32 @@
 			var container, stats;
 			var camera, controls, scene, renderer;
 
+			var devicePosition = {
+				x: -327.98520708801834,
+				y: 204.22425485218272,
+                z: -20.098459879167386
+            }
+
+            var deviceHeading = [
+                -0.018115165464278396,
+                -0.009781531386689035,
+				-0.981582379479962,
+                -0.1899268141110922
+            ]
+
 			init();
 			animate();
+
 			function init() {
 
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0x000000 );
+				scene.add(new THREE.AxesHelper(5))
 
 				camera = new THREE.PerspectiveCamera( 15, window.innerWidth / window.innerHeight, 0.01, 40 );
-				camera.position.x = 0.4;
-				camera.position.z = - 2;
+				camera.position.x = - 26.51092331038718
+				camera.position.y = 13.408973359550856
+				camera.position.z = 4.167778625793566
 				camera.up.set( 0, 0, 1 );
 
 				controls = new THREE.TrackballControls( camera );
@@ -96,15 +113,132 @@
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				document.body.appendChild( renderer.domElement );
 
-				var loader = new THREE.PCDLoader();
-				loader.load( './models/pcd/binary/Zaghetto.pcd', function ( mesh ) {
+				axios
+					.get('https://playment-uploads.s3.amazonaws.com/Marble/2018/11/16/5be3d3d8d1f6670069791d96/0.bin', {
+						responseType: 'arraybuffer'
+					})
+					.then(response => {
+						let arrayBuffer = response.data
+						let data = new Float32Array(arrayBuffer)
+						let vertices = []
+						for (let i = 0; i < data.length; i += 4) {
+							let dataArray = [data[i], data[i + 1], data[i + 2]]
+							const star = new THREE.Vector3()
+							star.x = dataArray[0]
+							star.y = dataArray[1]
+							star.z = dataArray[2]
+							vertices.push(star)
+						}
+						let geometry = new THREE.Geometry()
+						geometry.verticesNeedUpdate = true
+						geometry.vertices = vertices
+						const upperPlaneCloudMaterial = new THREE.PointsMaterial({color: 0xffffff, size: 0.08})
+						const world = new THREE.Points( geometry, upperPlaneCloudMaterial)
+                        scene.add(world)
 
-					scene.add( mesh );
-					var center = mesh.geometry.boundingSphere.center;
-					controls.target.set( center.x, center.y, center.z );
-					controls.update();
+                        // Add device helper
+                        addDeviceArrowHelpers([{q: deviceHeading, c: 0xff0000}])
 
-				} );
+                        // Add Camera helpers
+						let headingFrontLeft = {
+							q: [
+								-0.4178493949367778,
+								-0.5633034056097154,
+								0.5814999642685118,
+								0.4122486481908517
+							],
+							c: 0xfffff0,
+							position: {
+								y: 204.34262455950343,
+								x: -328.2917872842141,
+								z: -19.24435161802045
+							}
+						};
+						let headingFrontRight = {
+							q: [
+								-0.6941616713091042,
+								-0.16814164434593812,
+								0.17574426389318645,
+								0.6774820405225789
+							],
+							c: 0xffff00,
+							position: {
+								y: 204.41895776958367,
+								x: -328.3390016244738,
+								z: -19.248419906797995
+							}
+						};
+						let teleopFront = {
+							q: [
+								0.6881374107348317,
+								0.4572168969720992,
+								-0.32417672681053933,
+								-0.46079177820873785
+							],
+							c: 0xFF00FF,
+							position: {
+								y: 204.38744136624135,
+								x: -328.3470888329832,
+								z: -19.41486708853337
+							}
+						};
+						let teleopLeft = {
+							q: [
+								0.08928241099814646,
+								0.8548764539379589,
+								-0.5085064572487883,
+								-0.051342794286097934
+							],
+							c: 0x0000ff,
+							position: {
+								y: 204.13167508850702,
+								x: -328.33242614335956,
+								z: -19.241266801048017
+							}
+						};
+						let teleopRight = {
+							q: [
+								-0.8391294901374513,
+								0.2362714087555639,
+								-0.13908397136239076,
+								0.46977991559493926
+							],
+							c: 0x00F0ff,
+							position: {
+								y: 204.56744910213462,
+								x: -328.15011943689217,
+								z: -19.25282305638503
+							}
+						};
+						let teleopRear = {
+							q: [
+								-0.5212033391413391,
+								0.7619994771462804,
+								-0.3249699771731485,
+								0.2051789219993048
+							],
+							c: 0x00ff00,
+							position: {
+								y: 204.10687433390964,
+								x: -327.6329399355151,
+								z: -19.241833147599746
+							}
+						};
+
+
+						addCameraArrowHelpers([headingFrontLeft, headingFrontRight, teleopFront, teleopLeft, teleopRight, teleopRear])
+
+                        addRearCameraWithFrustum(teleopRear)
+					})
+
+				// loader.load( './models/pcd/binary/Zaghetto.pcd', function ( mesh ) {
+				//
+				// 	scene.add( mesh );
+				// 	var center = mesh.geometry.boundingSphere.center;
+				// 	controls.target.set( center.x, center.y, center.z );
+				// 	controls.update();
+				//
+				// } );
 
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
@@ -117,6 +251,103 @@
 
 				window.addEventListener( 'keypress', keyboard );
 
+			}
+
+			function addDeviceArrowHelpers(helpers) {
+				helpers.forEach(helper => {
+					let dir = new THREE.Vector3( 1, 0, 0);
+					let heading = new THREE.Quaternion(helper.q[0], helper.q[1], helper.q[2], helper.q[3])
+					dir.applyQuaternion( heading )
+					let origin = new THREE.Vector3( 0, 0, 0 );
+					let length = 3;
+					let hex = helper.c;
+					let arrowHelper = new THREE.ArrowHelper( dir, origin, length, hex ,0.5,0.2);
+					scene.add(arrowHelper)
+                })
+
+			}
+
+			function addCameraArrowHelpers(helpers) {
+				helpers.forEach(helper => {
+					let dir = new THREE.Vector3( 0, 0, 1);
+					let heading = new THREE.Quaternion(helper.q[0], helper.q[1], helper.q[2], helper.q[3])
+					dir.applyQuaternion( heading )
+					let origin = new THREE.Vector3( helper.position.x - devicePosition.x,
+                        helper.position.y - devicePosition.y,
+                        helper.position.z - devicePosition.z );
+					// let origin = new THREE.Vector3( 0,0,0);
+					let length = 3;
+					let hex = helper.c;
+					let arrowHelper = new THREE.ArrowHelper( dir, origin, length, hex ,0.5,0.2);
+					scene.add(arrowHelper)
+				})
+
+			}
+
+			function addRearCameraWithFrustum(rearCamera) {
+                let quaternion = new THREE.Quaternion(rearCamera.q[0], rearCamera.q[1], rearCamera.q[2], rearCamera.q[3])
+                quaternion = quaternion.normalize().conjugate()
+
+                let lidarQuaternion = new THREE.Quaternion(deviceHeading[0], deviceHeading[1], deviceHeading[2], deviceHeading[3])
+
+                let multipliedQ = lidarQuaternion.multiply(quaternion)
+
+                let rotationMatrix = new THREE.Matrix4().makeRotationFromQuaternion(multipliedQ)
+
+                let translation = {
+					x: rearCamera.position.x - devicePosition.x,
+					y: rearCamera.position.y - devicePosition.y,
+					z: rearCamera.position.z - devicePosition.z
+                }
+                rotationMatrix[3] = translation.x
+				rotationMatrix[7] = translation.y
+				rotationMatrix[11] = translation.z
+
+
+				let fx = 354.848025
+				let cy = 331.448458
+				let cx = 812.600868
+				let fy = 356.521296
+
+                let cameraMatrix = new THREE.Matrix4()
+				cameraMatrix.set(
+                    fx,0,cx,0,
+                    0,fy,cy,0,
+                    0,0,1,0,
+                    0,0,0,1
+                )
+                let projectionMatrix = cameraMatrix.multiply(rotationMatrix)
+				var camera = new THREE.PerspectiveCamera()
+                camera.position.x =rearCamera.position.x - devicePosition.x
+                camera.position.y = rearCamera.position.y - devicePosition.y
+				camera.position.z = rearCamera.position.z - devicePosition.z
+
+                let cameraAngle = new THREE.Quaternion(rearCamera.q[0], rearCamera.q[1], rearCamera.q[2], rearCamera.q[3])
+                camera.rotation.setFromQuaternion(cameraAngle)
+
+
+				var helper = new THREE.CameraHelper( camera );
+				camera.projectionMatrix.set(
+					projectionMatrix.elements[0],
+					projectionMatrix.elements[1],
+					projectionMatrix.elements[2],
+					projectionMatrix.elements[3],
+					projectionMatrix.elements[4],
+					projectionMatrix.elements[5],
+					projectionMatrix.elements[6],
+					projectionMatrix.elements[7],
+					projectionMatrix.elements[8],
+					projectionMatrix.elements[9],
+					projectionMatrix.elements[10],
+					projectionMatrix.elements[11],
+					projectionMatrix.elements[12],
+					projectionMatrix.elements[13],
+					projectionMatrix.elements[14],
+					projectionMatrix.elements[15],
+				)
+
+
+                scene.add(camera, helper)
 			}
 
 			function onWindowResize() {
