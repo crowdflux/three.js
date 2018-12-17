@@ -257,7 +257,7 @@
 						// addProjectionCamera(teleopRight)
                         //
 						addProjectionCamera(headingFrontLeft)
-						addProjectionCamera(headingFrontRight)
+						// addProjectionCamera(headingFrontRight)
 					})
 
 				// loader.load( './models/pcd/binary/Zaghetto.pcd', function ( mesh ) {
@@ -350,6 +350,35 @@
                     0,0,0,1
                 )
                 let projectionMatrix = cameraMatrix.multiply(rotationMatrix)
+
+				// Frustum planes are in the order of ( left, right, top, bottom, near, far )
+                let frustum = new THREE.Frustum()
+                frustum.setFromMatrix(projectionMatrix)
+				let planes = frustum.planes
+				// let fieldOfView = planes[0].normal.angleTo(planes[1].normal) * 180/Math.PI
+
+
+				var helper0 = new THREE.PlaneHelper( planes[0], 1, 0xffff00 )
+				var helper1 = new THREE.PlaneHelper( planes[1], 1, 0xffff00 )
+				var helper2 = new THREE.PlaneHelper( planes[2], 1, 0xffff00 )
+				var helper3 = new THREE.PlaneHelper( planes[3], 1, 0xffff00 )
+				var helper4 = new THREE.PlaneHelper( planes[4], 1, 0xffff00 )
+				var helper5 = new THREE.PlaneHelper( planes[5], 1, 0xffff00 )
+
+				let helperContainer = new THREE.Group()
+				helperContainer.add(helper0,
+					helper1,
+					helper2,
+					helper3,
+					helper4,
+					helper5)
+				helperContainer.position.x = translation.x
+				helperContainer.position.y = translation.y
+				helperContainer.position.y = translation.z
+                scene.add(helperContainer)
+
+
+
 				var camera = new THREE.PerspectiveCamera()
                 camera.position.x =projectionCamera.position.x - devicePosition.x
                 camera.position.y = projectionCamera.position.y - devicePosition.y
@@ -363,24 +392,24 @@
                 camera.rotation.setFromQuaternion(cameraAngle)
 				camera.rotation.y += Math.PI
 				var helper = new THREE.CameraHelper( camera );
-				camera.projectionMatrix.set(
-					projectionMatrix.elements[0],
-					projectionMatrix.elements[1],
-					projectionMatrix.elements[2],
-					projectionMatrix.elements[3],
-					projectionMatrix.elements[4],
-					projectionMatrix.elements[5],
-					projectionMatrix.elements[6],
-					projectionMatrix.elements[7],
-					projectionMatrix.elements[8],
-					projectionMatrix.elements[9],
-					projectionMatrix.elements[10],
-					projectionMatrix.elements[11],
-					projectionMatrix.elements[12],
-					projectionMatrix.elements[13],
-					projectionMatrix.elements[14],
-					projectionMatrix.elements[15],
-				)
+				// camera.projectionMatrix.set(
+				// 	projectionMatrix.elements[0],
+				// 	projectionMatrix.elements[1],
+				// 	projectionMatrix.elements[2],
+				// 	projectionMatrix.elements[3],
+				// 	projectionMatrix.elements[4],
+				// 	projectionMatrix.elements[5],
+				// 	projectionMatrix.elements[6],
+				// 	projectionMatrix.elements[7],
+				// 	projectionMatrix.elements[8],
+				// 	projectionMatrix.elements[9],
+				// 	projectionMatrix.elements[10],
+				// 	projectionMatrix.elements[11],
+				// 	projectionMatrix.elements[12],
+				// 	projectionMatrix.elements[13],
+				// 	projectionMatrix.elements[14],
+				// 	projectionMatrix.elements[15],
+				// )
                 scene.add(camera, helper)
 			}
 
