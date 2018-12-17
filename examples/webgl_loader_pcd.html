@@ -76,6 +76,115 @@
                 -0.1899268141110922
             ]
 
+			let headingFrontLeft = {
+				q: [
+					-0.4178493949367778,
+					-0.5633034056097154,
+					0.5814999642685118,
+					0.4122486481908517
+				],
+				c: 0xfffff0,
+				position: {
+					y: 204.34262455950343,
+					x: -328.2917872842141,
+					z: -19.24435161802045
+				},
+				fx: 561.997914,
+				cy: 361.97667,
+				cx: 664.16411,
+				fy: 561.585651
+			};
+			let headingFrontRight = {
+				q: [
+					-0.6941616713091042,
+					-0.16814164434593812,
+					0.17574426389318645,
+					0.6774820405225789
+				],
+				c: 0xffff00,
+				position: {
+					y: 204.41895776958367,
+					x: -328.3390016244738,
+					z: -19.248419906797995
+				},
+				fx: 537.74122,
+				cy: 353.596887,
+				cx: 687.798477,
+				fy: 541.411032,
+			};
+			let teleopFront = {
+				q: [
+					0.6881374107348317,
+					0.4572168969720992,
+					-0.32417672681053933,
+					-0.46079177820873785
+				],
+				c: 0xFF00FF,
+				position: {
+					y: 204.38744136624135,
+					x: -328.3470888329832,
+					z: -19.41486708853337
+				},
+				fx: 153.798886,
+				cy: 394.208215,
+				cx: 677.327617,
+				fy: 154.020918,
+			};
+			let teleopLeft = {
+				q: [
+					0.08928241099814646,
+					0.8548764539379589,
+					-0.5085064572487883,
+					-0.051342794286097934
+				],
+				c: 0x0000ff,
+				position: {
+					y: 204.13167508850702,
+					x: -328.33242614335956,
+					z: -19.241266801048017
+				},
+				fx: 326.176108,
+				cy: 338.922572,
+				cx: 258.66729,
+				fy: 326.603731,
+			};
+			let teleopRight = {
+				q: [
+					-0.8391294901374513,
+					0.2362714087555639,
+					-0.13908397136239076,
+					0.46977991559493926
+				],
+				c: 0x00F0ff,
+				position: {
+					y: 204.56744910213462,
+					x: -328.15011943689217,
+					z: -19.25282305638503
+				},
+				fx: 315.153628,
+				cy: 350.786817,
+				cx: 470.966126,
+				fy: 315.099825,
+			};
+			let teleopRear = {
+				q: [
+					-0.5212033391413391,
+					0.7619994771462804,
+					-0.3249699771731485,
+					0.2051789219993048
+				],
+				c: 0x00ff00,
+				position: {
+					y: 204.10687433390964,
+					x: -327.6329399355151,
+					z: -19.241833147599746
+				},
+				fx: 354.848025,
+				cy: 331.448458,
+				cx: 812.600868,
+				fy: 356.521296,
+			};
+
 			init();
 			animate();
 
@@ -86,9 +195,9 @@
 				scene.add(new THREE.AxesHelper(5))
 
 				camera = new THREE.PerspectiveCamera( 15, window.innerWidth / window.innerHeight, 0.01, 40 );
-				camera.position.x = - 26.51092331038718
-				camera.position.y = 13.408973359550856
-				camera.position.z = 4.167778625793566
+				camera.position.x = 24.930370491677184
+				camera.position.y = -6.674151720211394
+				camera.position.z = 15.294846385737351
 				camera.up.set( 0, 0, 1 );
 
 				controls = new THREE.TrackballControls( camera );
@@ -140,95 +249,15 @@
                         addDeviceArrowHelpers([{q: deviceHeading, c: 0xff0000}])
 
                         // Add Camera helpers
-						let headingFrontLeft = {
-							q: [
-								-0.4178493949367778,
-								-0.5633034056097154,
-								0.5814999642685118,
-								0.4122486481908517
-							],
-							c: 0xfffff0,
-							position: {
-								y: 204.34262455950343,
-								x: -328.2917872842141,
-								z: -19.24435161802045
-							}
-						};
-						let headingFrontRight = {
-							q: [
-								-0.6941616713091042,
-								-0.16814164434593812,
-								0.17574426389318645,
-								0.6774820405225789
-							],
-							c: 0xffff00,
-							position: {
-								y: 204.41895776958367,
-								x: -328.3390016244738,
-								z: -19.248419906797995
-							}
-						};
-						let teleopFront = {
-							q: [
-								0.6881374107348317,
-								0.4572168969720992,
-								-0.32417672681053933,
-								-0.46079177820873785
-							],
-							c: 0xFF00FF,
-							position: {
-								y: 204.38744136624135,
-								x: -328.3470888329832,
-								z: -19.41486708853337
-							}
-						};
-						let teleopLeft = {
-							q: [
-								0.08928241099814646,
-								0.8548764539379589,
-								-0.5085064572487883,
-								-0.051342794286097934
-							],
-							c: 0x0000ff,
-							position: {
-								y: 204.13167508850702,
-								x: -328.33242614335956,
-								z: -19.241266801048017
-							}
-						};
-						let teleopRight = {
-							q: [
-								-0.8391294901374513,
-								0.2362714087555639,
-								-0.13908397136239076,
-								0.46977991559493926
-							],
-							c: 0x00F0ff,
-							position: {
-								y: 204.56744910213462,
-								x: -328.15011943689217,
-								z: -19.25282305638503
-							}
-						};
-						let teleopRear = {
-							q: [
-								-0.5212033391413391,
-								0.7619994771462804,
-								-0.3249699771731485,
-								0.2051789219993048
-							],
-							c: 0x00ff00,
-							position: {
-								y: 204.10687433390964,
-								x: -327.6329399355151,
-								z: -19.241833147599746
-							}
-						};
-
-
 						addCameraArrowHelpers([headingFrontLeft, headingFrontRight, teleopFront, teleopLeft, teleopRight, teleopRear])
 
-                        addRearCameraWithFrustum(teleopRear)
+						// addProjectionCamera(teleopFront)
+                        // addProjectionCamera(teleopRear)
+						// addProjectionCamera(teleopLeft)
+						// addProjectionCamera(teleopRight)
+                        //
+						addProjectionCamera(headingFrontLeft)
+						addProjectionCamera(headingFrontRight)
 					})
 
 				// loader.load( './models/pcd/binary/Zaghetto.pcd', function ( mesh ) {
@@ -284,8 +313,12 @@
 
 			}
 
-			function addRearCameraWithFrustum(rearCamera) {
-                let quaternion = new THREE.Quaternion(rearCamera.q[0], rearCamera.q[1], rearCamera.q[2], rearCamera.q[3])
+			function addProjectionCamera(projectionCamera) {
+                let quaternion = new THREE.Quaternion(
+                	projectionCamera.q[0],
+                    projectionCamera.q[1],
+                    projectionCamera.q[2],
+                    projectionCamera.q[3])
                 quaternion = quaternion.normalize().conjugate()
 
                 let lidarQuaternion = new THREE.Quaternion(deviceHeading[0], deviceHeading[1], deviceHeading[2], deviceHeading[3])
@@ -295,19 +328,19 @@
                 let rotationMatrix = new THREE.Matrix4().makeRotationFromQuaternion(multipliedQ)
 
                 let translation = {
-					x: rearCamera.position.x - devicePosition.x,
-					y: rearCamera.position.y - devicePosition.y,
-					z: rearCamera.position.z - devicePosition.z
+					x: projectionCamera.position.x - devicePosition.x,
+					y: projectionCamera.position.y - devicePosition.y,
+					z: projectionCamera.position.z - devicePosition.z
                 }
                 rotationMatrix[3] = translation.x
 				rotationMatrix[7] = translation.y
 				rotationMatrix[11] = translation.z
 
 
-				let fx = 354.848025
-				let cy = 331.448458
-				let cx = 812.600868
-				let fy = 356.521296
+				let fx = projectionCamera.fx
+				let cy = projectionCamera.cy
+				let cx = projectionCamera.cx
+				let fy = projectionCamera.fy
 
                 let cameraMatrix = new THREE.Matrix4()
 				cameraMatrix.set(
@@ -318,14 +351,17 @@
                 )
                 let projectionMatrix = cameraMatrix.multiply(rotationMatrix)
 				var camera = new THREE.PerspectiveCamera()
-                camera.position.x =rearCamera.position.x - devicePosition.x
-                camera.position.y = rearCamera.position.y - devicePosition.y
-				camera.position.z = rearCamera.position.z - devicePosition.z
+                camera.position.x =projectionCamera.position.x - devicePosition.x
+                camera.position.y = projectionCamera.position.y - devicePosition.y
+				camera.position.z = projectionCamera.position.z - devicePosition.z
 
-                let cameraAngle = new THREE.Quaternion(rearCamera.q[0], rearCamera.q[1], rearCamera.q[2], rearCamera.q[3])
+                let cameraAngle = new THREE.Quaternion(
+                	projectionCamera.q[0],
+                    projectionCamera.q[1],
+                    projectionCamera.q[2],
+                    projectionCamera.q[3])
                 camera.rotation.setFromQuaternion(cameraAngle)
-
-
+				camera.rotation.y += Math.PI
 				var helper = new THREE.CameraHelper( camera );
 				camera.projectionMatrix.set(
 					projectionMatrix.elements[0],
@@ -345,8 +381,6 @@
 					projectionMatrix.elements[14],
 					projectionMatrix.elements[15],
 				)
-
-
                 scene.add(camera, helper)
 			}
 
