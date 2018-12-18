@@ -61,7 +61,7 @@
 			}
 
 			var container, stats;
-			var camera, controls, scene, renderer;
+			var mainCamera, controls, scene, renderer;
 
 			var devicePosition = {
 				x: -327.98520708801834,
@@ -92,7 +92,8 @@
 				fx: 561.997914,
 				cy: 361.97667,
 				cx: 664.16411,
-				fy: 561.585651
+				fy: 561.585651,
+                type: 'headingFrontLeft'
 			};
 			let headingFrontRight = {
 				q: [
@@ -111,6 +112,7 @@
 				cy: 353.596887,
 				cx: 687.798477,
 				fy: 541.411032,
+                type: 'headingFrontRight'
 			};
 			let teleopFront = {
 				q: [
@@ -129,6 +131,7 @@
 				cy: 394.208215,
 				cx: 677.327617,
 				fy: 154.020918,
+                type: 'teleopFront'
 			};
 			let teleopLeft = {
 				q: [
@@ -147,6 +150,7 @@
 				cy: 338.922572,
 				cx: 258.66729,
 				fy: 326.603731,
+                type: 'teleopLeft'
 			};
 			let teleopRight = {
 				q: [
@@ -165,6 +169,7 @@
 				cy: 350.786817,
 				cx: 470.966126,
 				fy: 315.099825,
+                type: 'teleopRight'
 			};
 			let teleopRear = {
 				q: [
@@ -183,6 +188,7 @@
 				cy: 331.448458,
 				cx: 812.600868,
 				fy: 356.521296,
+                type: 'teleopRear'
 			};
 
 			init();
@@ -194,13 +200,13 @@
 				scene.background = new THREE.Color( 0x000000 );
 				scene.add(new THREE.AxesHelper(5))
 
-				camera = new THREE.PerspectiveCamera( 15, window.innerWidth / window.innerHeight, 0.01, 40 );
-				camera.position.x = 24.930370491677184
-				camera.position.y = -6.674151720211394
-				camera.position.z = 15.294846385737351
-				camera.up.set( 0, 0, 1 );
+				mainCamera = new THREE.PerspectiveCamera( 15, 1280/720 , 0.01, 40 );
+				mainCamera.position.x = 24.930370491677184
+				mainCamera.position.y = -6.674151720211394
+				mainCamera.position.z = 15.294846385737351
+				mainCamera.up.set( 0, 0, 1 );
 
-				controls = new THREE.TrackballControls( camera );
+				controls = new THREE.TrackballControls( mainCamera );
 
 				controls.rotateSpeed = 2.0;
 				controls.zoomSpeed = 0.3;
@@ -215,7 +221,7 @@
 				controls.minDistance = 0.3;
 				controls.maxDistance = 0.3 * 100;
 
-				scene.add( camera );
+				scene.add( mainCamera );
 
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
@@ -256,8 +262,8 @@
 						// addProjectionCamera(teleopLeft)
 						// addProjectionCamera(teleopRight)
                         //
-						addProjectionCamera(headingFrontLeft)
-						// addProjectionCamera(headingFrontRight)
+						// addProjectionCamera(headingFrontLeft)
+						addProjectionCamera(headingFrontRight)
 					})
 
 				// loader.load( './models/pcd/binary/Zaghetto.pcd', function ( mesh ) {
@@ -292,6 +298,7 @@
 					let hex = helper.c;
 					let arrowHelper = new THREE.ArrowHelper( dir, origin, length, hex ,0.5,0.2);
 					scene.add(arrowHelper)
+                    this.device = dir
                 })
 
 			}
@@ -307,6 +314,7 @@
 					// let origin = new THREE.Vector3( 0,0,0);
 					let length = 3;
 					let hex = helper.c;
+					this[helper.type] = dir
 					let arrowHelper = new THREE.ArrowHelper( dir, origin, length, hex ,0.5,0.2);
 					scene.add(arrowHelper)
 				})
@@ -314,27 +322,25 @@
 			}
 
 			function addProjectionCamera(projectionCamera) {
-                let quaternion = new THREE.Quaternion(
-                	projectionCamera.q[0],
-                    projectionCamera.q[1],
-                    projectionCamera.q[2],
-                    projectionCamera.q[3])
-                quaternion = quaternion.normalize().conjugate()
+                // let quaternion = new THREE.Quaternion(
+                // 	projectionCamera.q[0],
+                //     projectionCamera.q[1],
+                //     projectionCamera.q[2],
+                //     projectionCamera.q[3])
+                //
+                // let lidarQuaternion = new THREE.Quaternion(deviceHeading[0], deviceHeading[1], deviceHeading[2], deviceHeading[3])
 
-                let lidarQuaternion = new THREE.Quaternion(deviceHeading[0], deviceHeading[1], deviceHeading[2], deviceHeading[3])
+                let rotationQuaternion = new THREE.Quaternion().setFromUnitVectors(this.device.normalize(), this[projectionCamera.type].normalize())
 
-                let multipliedQ = lidarQuaternion.multiply(quaternion)
-
-                let rotationMatrix = new THREE.Matrix4().makeRotationFromQuaternion(multipliedQ)
-
+                let rotationTranslationMatrix = new THREE.Matrix4().makeRotationFromQuaternion(rotationQuaternion)
                 let translation = {
 					x: projectionCamera.position.x - devicePosition.x,
 					y: projectionCamera.position.y - devicePosition.y,
 					z: projectionCamera.position.z - devicePosition.z
                 }
-                rotationMatrix[3] = translation.x
-				rotationMatrix[7] = translation.y
-				rotationMatrix[11] = translation.z
+                rotationTranslationMatrix.elements[3] = translation.x
+				rotationTranslationMatrix.elements[7] = translation.y
+				rotationTranslationMatrix.elements[11] = translation.z
 
 
 				let fx = projectionCamera.fx
@@ -344,54 +350,33 @@
 
                 let cameraMatrix = new THREE.Matrix4()
 				cameraMatrix.set(
-                    fx,0,cx,0,
-                    0,fy,cy,0,
-                    0,0,1,0,
-                    0,0,0,1
+                    fx,0,-cx,0,
+                    0,fy,-cy,0,
+                    0,0,-1,0,
+                    0,0,-1,0
                 )
-                let projectionMatrix = cameraMatrix.multiply(rotationMatrix)
+                let projectionMatrix = cameraMatrix.multiply(rotationTranslationMatrix)
 
-				// Frustum planes are in the order of ( left, right, top, bottom, near, far )
-                let frustum = new THREE.Frustum()
-                frustum.setFromMatrix(projectionMatrix)
-				let planes = frustum.planes
-				// let fieldOfView = planes[0].normal.angleTo(planes[1].normal) * 180/Math.PI
+				var camera = new THREE.PerspectiveCamera(
+					Math.atan(1/projectionMatrix.elements[10])*2 * 180/Math.PI,
+					window.innerWidth/window.innerHeight, 0.1, 1000)
 
-
-				var helper0 = new THREE.PlaneHelper( planes[0], 1, 0xffff00 )
-				var helper1 = new THREE.PlaneHelper( planes[1], 1, 0xffff00 )
-				var helper2 = new THREE.PlaneHelper( planes[2], 1, 0xffff00 )
-				var helper3 = new THREE.PlaneHelper( planes[3], 1, 0xffff00 )
-				var helper4 = new THREE.PlaneHelper( planes[4], 1, 0xffff00 )
-				var helper5 = new THREE.PlaneHelper( planes[5], 1, 0xffff00 )
-
-				let helperContainer = new THREE.Group()
-				helperContainer.add(helper0,
-					helper1,
-					helper2,
-					helper3,
-					helper4,
-					helper5)
-				helperContainer.position.x = translation.x
-				helperContainer.position.y = translation.y
-				helperContainer.position.y = translation.z
-                scene.add(helperContainer)
-
-
-
-				var camera = new THREE.PerspectiveCamera()
-                camera.position.x =projectionCamera.position.x - devicePosition.x
+                camera.position.x = projectionCamera.position.x - devicePosition.x
                 camera.position.y = projectionCamera.position.y - devicePosition.y
 				camera.position.z = projectionCamera.position.z - devicePosition.z
 
-                let cameraAngle = new THREE.Quaternion(
+
+
+
+                let cameraquaternion = new THREE.Quaternion(
                 	projectionCamera.q[0],
                     projectionCamera.q[1],
                     projectionCamera.q[2],
                     projectionCamera.q[3])
-                camera.rotation.setFromQuaternion(cameraAngle)
+                camera.rotation.setFromQuaternion(cameraquaternion)
 				camera.rotation.y += Math.PI
-				var helper = new THREE.CameraHelper( camera );
+
+
 				// camera.projectionMatrix.set(
 				// 	projectionMatrix.elements[0],
 				// 	projectionMatrix.elements[1],
@@ -410,13 +395,46 @@
 				// 	projectionMatrix.elements[14],
 				// 	projectionMatrix.elements[15],
 				// )
+
+                this.testCamera = camera
+				var helper = new THREE.CameraHelper( camera );
+
+
+
+				// Frustum helper
+				// let frustum = new THREE.Frustum()
+				// frustum.setFromMatrix(rotationTranslationMatrix)
+				// let planes = frustum.planes
+                //
+                //
+				// var helper0 = new THREE.PlaneHelper( planes[0], 1, 0xffff00 )
+				// var helper1 = new THREE.PlaneHelper( planes[1], 1, 0xffff00 )
+				// var helper2 = new THREE.PlaneHelper( planes[2], 1, 0xffff00 )
+				// var helper3 = new THREE.PlaneHelper( planes[3], 1, 0xffff00 )
+				// var helper4 = new THREE.PlaneHelper( planes[4], 1, 0xffff00 )
+				// var helper5 = new THREE.PlaneHelper( planes[5], 1, 0xffff00 )
+                //
+				// let helperContainer = new THREE.Group()
+				// helperContainer.add(helper0,
+				// 	helper1,
+				// 	helper2,
+				// 	helper3,
+				// 	helper4,
+				// 	helper5)
+				// helperContainer.position.x = translation.x
+				// helperContainer.position.y = translation.y
+				// helperContainer.position.y = translation.z
+				// scene.add(helperContainer)
+
+				// end Frustum helper
+
                 scene.add(camera, helper)
 			}
 
 			function onWindowResize() {
 
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
+				mainCamera.aspect = window.innerWidth / window.innerHeight;
+				mainCamera.updateProjectionMatrix();
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				controls.handleResize();
 
@@ -451,8 +469,8 @@
 
 				requestAnimationFrame( animate );
 				controls.update();
-				renderer.render( scene, camera );
 				stats.update();
+				this.testCamera && renderer.render( scene, this.testCamera );
 
 			}
 
